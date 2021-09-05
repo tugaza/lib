@@ -1,0 +1,42 @@
+#NAMESPACE=radio_timeslots
+
+function queues() {
+    timeslot_queue=`this::get_timeslot_queue`
+    if [[ $timeslot_queue == "" ]]
+    then
+        echo "$REQUEST_QUEUE" 
+        echo "$IDLE_QUEUE"
+        return
+    fi
+    echo "$REQUEST_QUEUE" 
+    echo "$timeslot_queue" 
+    echo "$IDLE_QUEUE"
+}
+
+function get_timeslot_queue() {
+    local timeslot=`this::_get_timeslot_json`
+    echo "$timeslot" | jq ".queue" | tr -d \"
+}
+
+function get_timeslot_queue_at(at_day at_time) {
+    local timeslot=`this::_get_timeslot_json_at_time "$at_day" "$at_time"`
+    echo "$timeslot" | jq ".queue" | tr -d \"
+}
+
+function get_timeslot_name() {
+    local timeslot=`this::_get_timeslot_json`
+    echo "$timeslot" | jq ".human_name" | tr -d \"
+}
+
+function get_timeslot_times() {
+    local timeslot=`this::_get_timeslot_json`
+    echo `echo "$timeslot" | jq ".start_time"` - `echo $timeslot | jq ".end_time"` | tr -d \"
+}
+
+function _get_timeslot_json() {
+    this::_get_timeslot_json_at_time "`date +%u`" "`date +%H%M`"
+}
+
+function _get_timeslot_json_at_time(at_day at_time) {
+    echo $(cat $SHARED_STORAGE/timeslots.json | jq ".[].timeslot | select ( .day[] | contains($at_day)) | select (.start_time <= $at_time) | select (.end_time > $at_time)")
+}
