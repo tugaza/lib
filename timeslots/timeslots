@@ -15,17 +15,17 @@ function queues() {
 
 function get_timeslot_queue() {
     local timeslot=`this::_get_timeslot_json`
-    echo "$timeslot" | jq ".queue" | tr -d \"
+    echo "$timeslot" | jq ".queue" | tr -d \" | tr -d "\n"
 }
 
 function get_timeslot_queue_at(at_day at_time) {
     local timeslot=`this::_get_timeslot_json_at_time "$at_day" "$at_time"`
-    echo "$timeslot" | jq ".queue" | tr -d \"
+    echo "$timeslot" | jq ".queue" | tr -d \" | tr -d "\n"
 }
 
 function get_timeslot_name() {
     local timeslot=`this::_get_timeslot_json`
-    echo "$timeslot" | jq ".human_name" | tr -d \"
+    echo "$timeslot" | jq ".human_name" | tr -d \" | tr -d "\n"
 }
 
 function get_timeslot_times() {
