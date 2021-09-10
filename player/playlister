@@ -40,9 +40,10 @@ function add_to_playlist(item) {
 function get_item() {
     for queue in `radio_timeslots::queues`
     do
-	item=`this::_get_from_queue "$queue"`
+	item=`this::_peek_from_queue "$queue"`
 	logger::log "info" "get item = $item (queue $queue)"
 	if [[ $item != "" ]] && `this::_is_invalid "$item"`; then
+            item=`this::_get_from_queue "$queue"`
 	    if [[ `radio_timeslots::get_timeslot_queue` != "" && $queue == "$REQUEST_QUEUE" ]]
 	    then
 		namespaced item_return_queue=`radio_timeslots::get_timeslot_queue`
