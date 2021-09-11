@@ -7,17 +7,19 @@ dependencies::depends "timeslots/timeslots"
 function peek() {
     for queue in `radio_timeslots::queues`
     do
-	item=`this::_peek_from_queue "$queue"`
-	this::_is_invalid "$item"
-	logger::log "info" "peek item = $item (queue $queue) [invalid = $?]"
-	if [[ $item != "" ]] && `this::_is_invalid "$item"`; then
-    	    echo "$item"
-	    return
-	else
-	    if [[ $item != "" && $queue == $REQUEST_QUEUE && $ALLOW_SKIPPING_DURING_PEEK -eq 1 ]]; then
-		logger::log "error" "skipping `this::_get_from_queue $queue` in $queue"
-	    fi
-	fi
+    item=`this::_peek_from_queue "$queue"`
+    this::_is_invalid "$item"
+    logger::log "info" "peek item = $item (queue $queue) [invalid = $?]"
+    if [[ $item != "" ]] && `this::_is_invalid "$item"`; then
+        echo "$item"
+        return
+    else
+        if [[ $ALLOW_SKIPPING_DURING_PEEK -eq 1 && $item != "" ]]; then
+            if [[ $queue == $REQUEST_QUEUE || $queue == $IDLE_QUEUE ]]; then
+                logger::log "error" "skipping `this::_get_from_queue $queue` in $queue"
+            fi
+        fi
+    fi
     done
     logger::log "error" "peek found no suitable item!"
 }
@@ -32,7 +34,7 @@ function add_to_playlist(item) {
         queue_client::publish "${namespaced item_return_queue}" "$item"
         logger::log "info" "$item added to queue ${namespaced item_return_queue}" 
 
-	return
+    return
     fi 
 
 }
@@ -40,20 +42,19 @@ function add_to_playlist(item) {
 function get_item() {
     for queue in `radio_timeslots::queues`
     do
-	item=`this::_peek_from_queue "$queue"`
-	logger::log "info" "get item = $item (queue $queue)"
-	if [[ $item != "" ]] && `this::_is_invalid "$item"`; then
-            item=`this::_get_from_queue "$queue"`
-	    if [[ `radio_timeslots::get_timeslot_queue` != "" && $queue == "$REQUEST_QUEUE" ]]
-	    then
-		namespaced item_return_queue=`radio_timeslots::get_timeslot_queue`
-	    else
-		namespaced item_return_queue=$queue
-    	    fi
-	    redis-cli --raw -h redis SET x-return-queue ${namespaced item_return_queue} > /dev/null
-	    echo "$item"
-	    return
-	fi
+    item=`this::_peek_from_queue "$queue"`
+    logger::log "info" "get item = $item (queue $queue)"
+    if [[ $item != "" ]] && `this::_is_invalid "$item"`; then
+        item=`this::_get_from_queue "$queue"`
+        if [[ `radio_timeslots::get_timeslot_queue` != "" && $queue == "$REQUEST_QUEUE" ]]; then
+            namespaced item_return_queue=`radio_timeslots::get_timeslot_queue`
+        else
+            namespaced item_return_queue=$queue
+        fi
+        redis-cli --raw -h redis SET x-return-queue ${namespaced item_return_queue} > /dev/null
+        echo "$item"
+        return
+    fi
     done
     logger::log "error" "get found no suitable item!"
     echo "$item"
