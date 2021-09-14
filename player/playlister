@@ -26,17 +26,15 @@ function peek() {
 
 function add_to_playlist(item) {
     redis-cli --raw -h redis SETEX x-played-$item 3600 1
-    queue_client::publish "$IDLE_QUEUE" "$item"
-    logger::log "info" "$item added to idle queue" 
     namespaced item_return_queue=`redis-cli --raw -h redis GET x-return-queue`
     if [[ "${namespaced item_return_queue}" != "$IDLE_QUEUE" && "${namespaced item_return_queue}" != "$REQUEST_QUEUE" && "${namespaced item_return_queue}" != "" ]]
     then
         queue_client::publish "${namespaced item_return_queue}" "$item"
         logger::log "info" "$item added to queue ${namespaced item_return_queue}" 
-
-    return
+        return
     fi 
-
+    queue_client::publish "$IDLE_QUEUE" "$item"
+    logger::log "info" "$item added to idle queue"
 }
 
 function get_item() {
