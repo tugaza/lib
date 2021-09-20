@@ -13,6 +13,10 @@ function queues() {
     echo "$IDLE_QUEUE"
 }
 
+function get_all_queues() {
+    echo "$REQUEST_QUEUE" "$IDLE_QUEUE" $(cat $SHARED_STORAGE/timeslots.json | jq ".[].timeslot.queue" | sort | uniq | tr -d \")
+}
+
 function get_timeslot_queue() {
     local timeslot=`this::_get_timeslot_json`
     echo "$timeslot" | jq ".queue" | tr -d \" | tr -d "\n"
