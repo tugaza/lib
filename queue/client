@@ -28,3 +28,7 @@ function publish_left(queuename message) {
 function get_count(queuename) {
     redis-cli --raw -h redis LLEN $queuename
 } 
+
+function peek_multiple(queuename offset amount) {
+    redis-cli --raw -h redis LRANGE "$queuename" "$offset" "$amount"
+}
