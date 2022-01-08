@@ -25,7 +25,10 @@ function peek() {
 }
 
 function add_to_playlist(item) {
-    redis-cli --raw -h redis SETEX x-played-$item 3600 1
+    if [[ -z $PLAYED_TIMEOUT ]]; then
+        PLAYED_TIMEOUT=3600
+    fi
+    redis-cli --raw -h redis SETEX x-played-$item $PLAYED_TIMEOUT 1
     namespaced item_return_queue=`redis-cli --raw -h redis GET x-return-queue`
     if [[ "${namespaced item_return_queue}" != "$IDLE_QUEUE" && "${namespaced item_return_queue}" != "$REQUEST_QUEUE" && "${namespaced item_return_queue}" != "" ]]
     then
